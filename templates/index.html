@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quote Site - Home</title>
+</head>
+<body>
+    {% for quote in quotes %}
+        <h1>{{quote.quote}}</h1><h4>-{{quote.author}}</h4>
+    {% endfor %}
+    <a href="/create">Create New Quote</a>
+</body>
+</html>
