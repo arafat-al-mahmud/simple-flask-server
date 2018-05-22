@@ -1,6 +1,8 @@
 import json
-import sqlite3
+from pymongo import MongoClient
+from utils import read_configuration
 
+config = read_configuration()
 
 class AbstractBackend:
     def list_quotes(self):
@@ -43,22 +45,24 @@ class FileBackend(AbstractBackend):
 
 class DatabaseBackend(AbstractBackend):
     conn = None
-    cursor = None
+    db = None
 
     def on_start(self):
-        self.conn = sqlite3.connect('quotes.db')
-        self.cursor = self.conn.cursor()
+
+        host = config['mongodb_host']
+        port = int(config['mongodb_port'])
+
+        self.conn = MongoClient(host, port)
+        self.db = self.conn[config['mongodb_database']]
 
     def on_exit(self):
         self.conn.close()
 
     def list_quotes(self):
-        self.cursor.execute("SELECT * FROM quotes")
-        result = self.cursor.fetchall()
-        return [{'author': x[0], 'quote': x[1]}
-                for x in result]
+        collection = self.db['quotes']
+        cursor = collection.find({})
+        return list(cursor)
 
     def add_quote(self, quote):
-        self.cursor.execute(
-            f"INSERT INTO quotes VALUES ('{quote['author']}', '{quote['quote']}')")
-        self.conn.commit()
+        collection = self.db['quotes']
+        collection.insert_one(quote)
